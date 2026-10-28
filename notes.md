@@ -79,5 +79,11 @@ Closed with non-monetary relief (7,5%), In progress (1,1%), Untimely response (9
 
 Около 59 значений: 50 штатов + DC, территории (PR, VI, GU), военная почта
 (AA, AE, AP), NULL (889). Одна территория записана полным названием
-(UNITED STATES MINOR OUTLYING ISLANDS) вместо кода - несогласованность формата.
+(UNITED STATES MINOR OUTLYING ISLANDS) вместо кода.
+
+
+## Справочник штатов (второй источник)
+
+Источник: U.S. Census Bureau, Vintage 2025, NST-EST2025-ALLDATA
+
 
