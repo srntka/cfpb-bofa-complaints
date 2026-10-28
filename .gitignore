@@ -1,0 +1,7 @@
+data/*.csv
+!data/us_states.csv
+.env
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.idea/
