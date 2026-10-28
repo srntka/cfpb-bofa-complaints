@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
-load_dotenv()  # читает .env из корня проекта
+load_dotenv()
 
 def get_engine():
     url = (
