@@ -44,3 +44,11 @@ SELECT
 FROM stg_complaints
 GROUP BY state
 ORDER BY complaints ASC;
+
+-- 7. Покрытие соединения жалоб со справочником штатов.
+SELECT
+    COUNT(*)                                   AS complaints,
+    COUNT(s.state_code)                        AS matched_to_state,
+    COUNT(*) - COUNT(s.state_code)             AS not_matched
+FROM stg_complaints c
+LEFT JOIN stg_states s ON s.state_code = c.state;

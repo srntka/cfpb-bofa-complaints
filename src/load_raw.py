@@ -22,6 +22,9 @@ COLUMNS = {
     "Complaint ID": "complaint_id",
 }
 
+
+STATES_CSV = Path(__file__).resolve().parents[1] / "data" / "us_states.csv"
+
 def load_raw(csv_path: Path = RAW_CSV) -> int:
     df = pd.read_csv(
         csv_path,
@@ -46,5 +49,13 @@ def load_raw(csv_path: Path = RAW_CSV) -> int:
     print(f"Загружено строк: {len(df):,}")
     return len(df)
 
+
+def load_states(csv_path: Path = STATES_CSV) -> int:
+    df = pd.read_csv(csv_path, dtype={"state_code": str, "state_name": str})
+    df.to_sql("stg_states", get_engine(), if_exists="replace", index=False)
+    print(f"Загружено штатов: {len(df)}")
+    return len(df)
+
 if __name__ == "__main__":
     load_raw()
+    load_states()
