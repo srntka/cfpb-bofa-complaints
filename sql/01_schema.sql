@@ -1,19 +1,32 @@
-DROP TABLE IF EXISTS fact_complaints;
-DROP TABLE IF EXISTS dim_product;
-DROP TABLE IF EXISTS dim_issue;
-DROP TABLE IF EXISTS dim_state;
+DROP TABLE IF EXISTS fact_complaints CASCADE;
+DROP TABLE IF EXISTS dim_product CASCADE;
+DROP TABLE IF EXISTS dim_issue CASCADE;
+DROP TABLE IF EXISTS dim_state CASCADE;
 
 CREATE TABLE dim_product (
-    product_id   integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    product      text NOT NULL,
-    sub_product  text NOT NULL,
+    product_id     integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    product        text NOT NULL,
+    sub_product    text NOT NULL,
+    product_group  text NOT NULL,
     UNIQUE (product, sub_product)
 );
 
-INSERT INTO dim_product (product, sub_product)
+INSERT INTO dim_product (product, sub_product, product_group)
 SELECT DISTINCT
     product,
-    COALESCE(sub_product, '(not specified)')
+    COALESCE(sub_product, '(not specified)'),
+    CASE
+        WHEN product IN ('Credit card or prepaid card', 'Credit card', 'Prepaid card')
+            THEN 'Credit / prepaid card'
+        WHEN product IN ('Credit reporting, credit repair services, or other personal consumer reports',
+                         'Credit reporting or other personal consumer reports',
+                         'Debt or credit management')
+            THEN 'Credit reporting & repair'
+        WHEN product IN ('Payday loan, title loan, or personal loan',
+                         'Payday loan, title loan, personal loan, or advance loan')
+            THEN 'Payday / personal loan'
+        ELSE product
+    END
 FROM stg_complaints;
 
 CREATE TABLE dim_issue (
