@@ -8,6 +8,7 @@ WITH monthly AS (
         date_trunc('month', date_received AT TIME ZONE 'UTC')::date AS month,
         COUNT(*)                                                       AS complaints,
         AVG(timely_response::int)                                      AS share_timely,
+        COUNT(*) FILTER (WHERE timely_response)                        AS timely,  -- new
         COUNT(*) FILTER (WHERE company_response LIKE 'Closed%')        AS closed,
         COUNT(*) FILTER (WHERE company_response = 'Closed with monetary relief') AS monetary_relief,
         percentile_cont(0.5) WITHIN GROUP (
@@ -26,7 +27,10 @@ SELECT
     )                                                                  AS mom_change,
     ROUND(share_timely, 4)                                             AS share_timely,
     ROUND(monetary_relief::numeric / NULLIF(closed, 0), 4)             AS share_monetary_relief,
-    ROUND(median_delivery_hours::numeric, 2)                           AS median_delivery_hours
+    ROUND(median_delivery_hours::numeric, 2)                           AS median_delivery_hours,
+    timely,
+    closed,
+    monetary_relief   
 FROM monthly;
 
 -- Рейтинг штатов за весь период по абсолютному числу жалоб и на 100 тыс. жителей.
