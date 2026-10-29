@@ -1,10 +1,12 @@
 from pathlib import Path
+
 import pandas as pd
+
 from db import get_engine
 
-RAW_CSV = Path(__file__).resolve().parents[1] / "data" / "complaints.csv"
+DATA = Path(__file__).resolve().parents[1] / "data"
 
-COLUMNS = {
+RENAME = {
     "Date received": "date_received",
     "Product": "product",
     "Sub-product": "sub_product",
@@ -23,38 +25,21 @@ COLUMNS = {
 }
 
 
-STATES_CSV = Path(__file__).resolve().parents[1] / "data" / "us_states.csv"
-
-def load_raw(csv_path: Path = RAW_CSV) -> int:
-    df = pd.read_csv(
-        csv_path,
-        dtype=str,
-        keep_default_na=False,
-        na_values=["", "None"],
-    )
-    missing = set(COLUMNS) - set(df.columns)
-    if missing:
-        raise ValueError(f"В выгрузке нет колонок: {missing}")
-
-    df = df.rename(columns=COLUMNS)[list(COLUMNS.values())]
-
-    df.to_sql(
-        "stg_complaints",
-        get_engine(),
-        if_exists="replace",
-        index=False,
-        chunksize=2000,
-        method="multi",
-    )
-    print(f"Загружено строк: {len(df):,}")
-    return len(df)
+def load_raw():
+    # всё читаем текстом, "None" в выгрузке CFPB означает пропуск
+    df = pd.read_csv(DATA / "complaints.csv", dtype=str,
+                     keep_default_na=False, na_values=["", "None"])
+    df = df.rename(columns=RENAME)[list(RENAME.values())]
+    df.to_sql("stg_complaints", get_engine(), if_exists="replace",
+              index=False, method="multi", chunksize=5000)
+    print(f"stg_complaints: {len(df)} строк")
 
 
-def load_states(csv_path: Path = STATES_CSV) -> int:
-    df = pd.read_csv(csv_path, dtype={"state_code": str, "state_name": str})
+def load_states():
+    df = pd.read_csv(DATA / "us_states.csv")
     df.to_sql("stg_states", get_engine(), if_exists="replace", index=False)
-    print(f"Загружено штатов: {len(df)}")
-    return len(df)
+    print(f"stg_states: {len(df)} строк")
+
 
 if __name__ == "__main__":
     load_raw()

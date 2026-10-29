@@ -73,7 +73,7 @@ def save_results(result: pd.DataFrame, drivers: pd.DataFrame) -> None:
     print(f"Сохранено: {len(result)} месяцев, {len(drivers)} строк разложения")
 
 
-if __name__ == "__main__":
+def run_anomalies() -> None:
     result = detect_anomalies(load_monthly())
     anomaly_months = result.index[result["is_anomaly"]].tolist()
 
@@ -87,5 +87,8 @@ if __name__ == "__main__":
             parts.append(top)
 
     drivers = pd.concat(parts, ignore_index=True)
-    print(drivers.head(10))
     save_results(result, drivers)
+
+
+if __name__ == "__main__":
+    run_anomalies()

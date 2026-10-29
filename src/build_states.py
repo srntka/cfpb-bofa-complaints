@@ -2,9 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
-CENSUS_CSV = DATA_DIR / "NST-EST2025-ALLDATA.csv"
-OUTPUT_CSV = DATA_DIR / "us_states.csv"
+DATA = Path(__file__).resolve().parents[1] / "data"
 
 STATE_CODES = {
     "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR",
@@ -22,29 +20,25 @@ STATE_CODES = {
     "West Virginia": "WV", "Wisconsin": "WI", "Wyoming": "WY",
 }
 
-def build_states() -> pd.DataFrame:
+
+def build_states():
     df = pd.read_csv(
-        CENSUS_CSV,
+        DATA / "NST-EST2025-ALLDATA.csv",
         usecols=["SUMLEV", "STATE", "NAME", "POPESTIMATE2025"],
         dtype={"SUMLEV": str, "STATE": str},
     )
     states = df[(df["SUMLEV"] == "040") & (df["STATE"] != "72")]
-
     states = states.assign(state_code=states["NAME"].map(STATE_CODES))
-
-    unmapped = states.loc[states["state_code"].isna(), "NAME"].tolist()
-    if unmapped:
-        raise ValueError(f"Нет кода для штатов: {unmapped}")
+    assert states["state_code"].notna().all(), "не для всех штатов нашёлся код"
 
     result = (
         states.rename(columns={"NAME": "state_name", "POPESTIMATE2025": "population"})
         [["state_code", "state_name", "population"]]
         .sort_values("state_code")
     )
+    result.to_csv(DATA / "us_states.csv", index=False)
+    print(f"us_states.csv: {len(result)} штатов")
 
-    result.to_csv(OUTPUT_CSV, index=False)
-    print(f"Сохранено штатов: {len(result)} → {OUTPUT_CSV.name}")
-    return result
 
 if __name__ == "__main__":
     build_states()
