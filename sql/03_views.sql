@@ -1,0 +1,29 @@
+-- Витрины для дашборда и анализа.
+
+-- Помесячные KPI: поток жалоб, изменение к прошлому месяцу,
+-- доля ответов вовремя, доля денежных компенсаций (от закрытых), медиана времени передачи.
+CREATE OR REPLACE VIEW v_monthly AS
+WITH monthly AS ( SELECT
+        date_trunc('month', date_received AT TIME ZONE 'UTC')::date AS month,
+        COUNT(*)                                                       AS complaints,
+        AVG(timely_response::int)                                      AS share_timely,
+        COUNT(*) FILTER (WHERE company_response LIKE 'Closed%')        AS closed,
+        COUNT(*) FILTER (WHERE company_response = 'Closed with monetary relief') AS monetary_relief,
+        percentile_cont(0.5) WITHIN GROUP (
+            ORDER BY EXTRACT(EPOCH FROM date_sent_to_company - date_received) / 3600
+        )                                                              AS median_delivery_hours
+    FROM fact_complaints
+    GROUP BY 1
+)
+SELECT
+    month,
+    complaints,
+    LAG(complaints) OVER (ORDER BY month)                              AS complaints_prev_month,
+    ROUND(
+        (complaints - LAG(complaints) OVER (ORDER BY month))::numeric
+        / NULLIF(LAG(complaints) OVER (ORDER BY month), 0), 4
+    )                                                                  AS mom_change,
+    ROUND(share_timely, 4)                                             AS share_timely,
+    ROUND(monetary_relief::numeric / NULLIF(closed, 0), 4)             AS share_monetary_relief,
+    ROUND(median_delivery_hours::numeric, 2)                           AS median_delivery_hours
+FROM monthly;
